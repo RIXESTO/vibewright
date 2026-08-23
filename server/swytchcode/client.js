@@ -137,7 +137,6 @@ class SwytchcodeClient {
                 query: `{
                     Get {
                         ${this.weaviateClass}(
-                            nearText: { concepts: ["${query.replace(/"/g, '\\"')}"] }
                             limit: ${topK}
                         ) { title url content }
                     }
