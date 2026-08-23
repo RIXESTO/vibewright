@@ -12,8 +12,7 @@ function getDomain(url) {
 function Home() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
-    // Track active tab for each post on the feed
-    const [activeTabs, setActiveTabs] = useState({});
+    const [globalCategory, setGlobalCategory] = useState('short');
 
     useEffect(() => {
         fetch('http://localhost:5001/api/posts')
@@ -56,12 +55,22 @@ function Home() {
                 <h2>Chronological AI Feed ({posts.length} Articles)</h2>
             </div>
 
+            {/* Global Content Classification */}
+            <div style={{marginBottom: '2rem'}}>
+                <p style={{color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.8rem', textTransform: 'uppercase', fontWeight: 'bold'}}>Classify Feed By Category:</p>
+                <div className="category-tabs" style={{margin: '0', borderBottom: 'none'}}>
+                    <button className={`tab-btn ${globalCategory === 'short' ? 'active' : ''}`} onClick={() => setGlobalCategory('short')}>⚡ Short-Form</button>
+                    <button className={`tab-btn ${globalCategory === 'caption' ? 'active' : ''}`} onClick={() => setGlobalCategory('caption')}>📸 Captions</button>
+                    <button className={`tab-btn ${globalCategory === 'thread' ? 'active' : ''}`} onClick={() => setGlobalCategory('thread')}>🧵 Threads</button>
+                    <button className={`tab-btn ${globalCategory === 'blog' ? 'active' : ''}`} onClick={() => setGlobalCategory('blog')}>📰 Blogs</button>
+                </div>
+            </div>
+
             <div className="posts-container">
                 {posts.length === 0 ? <p>No posts available.</p> : posts.map(post => {
                     const domains = Array.from(new Set((post.sources || []).map(getDomain)));
                     
                     const hasCategories = !!(post.blog || post.short_form || post.thread || post.caption);
-                    const currentTab = activeTabs[post.id || post.slug] || 'short';
                     
                     return (
                         <div key={post._id || post.id || post.slug} className="post-card">
@@ -76,27 +85,18 @@ function Home() {
                                 </div>
                             )}
 
-                            {/* Inline Category Tabs */}
-                            {hasCategories && (
-                                <div className="category-tabs" style={{margin: '1rem 0'}}>
-                                    <button className={`tab-btn ${currentTab === 'short' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'short'})}>⚡ Short-Form</button>
-                                    <button className={`tab-btn ${currentTab === 'caption' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'caption'})}>📸 Caption</button>
-                                    <button className={`tab-btn ${currentTab === 'thread' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'thread'})}>🧵 Thread</button>
-                                    <button className={`tab-btn ${currentTab === 'blog' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'blog'})}>📰 Blog</button>
-                                </div>
-                            )}
-
-                            <div className="content-display-box" style={{marginTop: '0', padding: '1rem', background: 'rgba(255,255,255,0.02)'}}>
+                            {/* Content Display based on Global Classification */}
+                            <div className="content-display-box" style={{marginTop: '0', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderLeft: '4px solid #6366f1'}}>
                                 {hasCategories ? (
                                     <>
-                                        {currentTab === 'short' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
-                                        {currentTab === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
-                                        {currentTab === 'thread' && (
+                                        {globalCategory === 'short' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
+                                        {globalCategory === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
+                                        {globalCategory === 'thread' && (
                                             <div style={{maxHeight:'200px', overflowY:'auto'}}>
                                                 {(post.thread || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
                                             </div>
                                         )}
-                                        {currentTab === 'blog' && (
+                                        {globalCategory === 'blog' && (
                                             <div style={{maxHeight:'200px', overflowY:'auto'}}>
                                                 {(post.blog || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
                                             </div>
