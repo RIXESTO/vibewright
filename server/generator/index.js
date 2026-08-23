@@ -8,7 +8,12 @@ async function generateGroundedPost(contextChunks) {
     const contextText = contextChunks.map(c => `Source URL: ${c.url}\nTitle: ${c.title}\nContent: ${c.content}`).join('\n\n');
     
     const prompt = `
-    You are an expert tech journalist. Use ONLY the following retrieved context to write an original article.
+    You are an expert tech journalist and social media manager. Use ONLY the following retrieved context to write an original piece of content in 4 distinct formats:
+    1. A short-form summary (1 punchy paragraph)
+    2. A social media caption (with emojis and hashtags)
+    3. A full blog post (multi-paragraph markdown)
+    4. A Twitter/X style thread (numbered 1/, 2/, etc.)
+    
     Do not hallucinate facts outside this context.
     
     Retrieved Context:
@@ -18,7 +23,10 @@ async function generateGroundedPost(contextChunks) {
     {
         "title": "A catchy title for the article",
         "slug": "url-friendly-slug",
-        "body": "The full markdown body of the article (3-4 paragraphs)",
+        "short_form": "The punchy 1-paragraph summary",
+        "caption": "The social media caption with emojis",
+        "blog": "The full markdown body of the blog post",
+        "thread": "The Twitter/X style thread (numbered list)",
         "key_points": ["point 1", "point 2"],
         "sources": ["url1", "url2"],
         "tags": ["tag1", "tag2"],

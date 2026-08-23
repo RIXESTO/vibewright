@@ -65,13 +65,31 @@ class SwytchcodeClient {
                 }
             );
             const items = res.data?.data || [];
-            const articles = items
-                .map(item => ({
-                    title:   item.title   || 'Untitled',
-                    url:     item.url     || '',
-                    content: item.content || item.description || item.markdown || ''
-                }))
-                .filter(a => a.content.length > 50);
+            const seenDomains = new Set();
+            const articles = [];
+            
+            for (const item of items) {
+                if (articles.length >= 5) break;
+                
+                const url = item.url || item.link || '';
+                const content = item.content || item.description || item.markdown || item.snippet || '';
+                
+                if (content.length > 50 && url) {
+                    try {
+                        const domain = new URL(url).hostname;
+                        if (!seenDomains.has(domain)) {
+                            seenDomains.add(domain);
+                            articles.push({
+                                title: item.title || item.name || 'Untitled',
+                                url: url,
+                                content: content
+                            });
+                        }
+                    } catch (e) {
+                        // Ignore invalid URLs
+                    }
+                }
+            }
 
             if (articles.length > 0) {
                 console.log(`[Swytchcode → Firecrawl] Found ${articles.length} articles`);

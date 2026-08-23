@@ -35,7 +35,7 @@ function Home() {
                             />
                         )}
                         <h3><Link to={`/post/${post.slug}`} style={{color: 'white', textDecoration: 'none'}}>{post.title}</Link></h3>
-                        <p className="snippet">{post.body.substring(0, 150)}...</p>
+                        <p className="snippet">{(post.short_form || post.body || '').substring(0, 150)}...</p>
                         <div className="post-tags">
                             {post.tags.map(tag => <span key={tag} className="post-tag">#{tag}</span>)}
                         </div>
@@ -85,7 +85,32 @@ function PostView() {
             )}
             
             <div className="post-body">
-                {post.body.split('\\n').map((line, i) => <p key={i}>{line}</p>)}
+                {post.blog ? (
+                    <>
+                        <div className="content-section">
+                            <h2>📰 Blog Post</h2>
+                            {post.blog.split('\\n').map((line, i) => <p key={i}>{line}</p>)}
+                        </div>
+                        <hr style={{margin: '2rem 0', borderColor: 'rgba(255,255,255,0.1)'}}/>
+                        <div className="content-section">
+                            <h2>⚡ Short-form Summary</h2>
+                            <p>{post.short_form}</p>
+                        </div>
+                        <hr style={{margin: '2rem 0', borderColor: 'rgba(255,255,255,0.1)'}}/>
+                        <div className="content-section">
+                            <h2>🧵 Twitter/X Thread</h2>
+                            {post.thread.split('\\n').map((line, i) => <p key={i}>{line}</p>)}
+                        </div>
+                        <hr style={{margin: '2rem 0', borderColor: 'rgba(255,255,255,0.1)'}}/>
+                        <div className="content-section">
+                            <h2>📸 Social Caption</h2>
+                            <p>{post.caption}</p>
+                        </div>
+                    </>
+                ) : (
+                    // Fallback for older posts before categorization
+                    post.body?.split('\\n').map((line, i) => <p key={i}>{line}</p>)
+                )}
             </div>
 
             <div className="post-meta-section">
