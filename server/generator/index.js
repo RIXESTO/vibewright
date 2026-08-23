@@ -8,11 +8,15 @@ async function generateGroundedPost(contextChunks) {
     const contextText = contextChunks.map(c => `Source URL: ${c.url}\nTitle: ${c.title}\nContent: ${c.content}`).join('\n\n');
     
     const prompt = `
-    You are an expert tech journalist and social media manager. Use ONLY the following retrieved context to write an original piece of content in 4 distinct formats:
-    1. A short-form summary (1 punchy paragraph)
-    2. A social media caption (with emojis and hashtags)
-    3. A full blog post (multi-paragraph markdown)
-    4. A Twitter/X style thread (numbered 1/, 2/, etc.)
+    You are an expert AI content classifier and tech journalist.
+    First, carefully analyze the retrieved context and determine which ONE of the following 4 formats is the BEST fit for presenting this information:
+    - "short_form": if it's a quick summary or simple announcement.
+    - "caption": if it's highly visual, promotional, or a simple social media hook.
+    - "blog": if it's detailed, multi-faceted, or long-form analysis.
+    - "thread": if it's a sequence of events, listicle, or step-by-step breakdown.
+    
+    After deciding the best classification, output that category name exactly in the "classification" field.
+    Then, write the content exclusively in the corresponding field for that classification, leaving the other 3 content fields as empty strings ("").
     
     Do not hallucinate facts outside this context.
     
@@ -23,10 +27,11 @@ async function generateGroundedPost(contextChunks) {
     {
         "title": "A catchy title for the article",
         "slug": "url-friendly-slug",
-        "short_form": "The punchy 1-paragraph summary",
-        "caption": "The social media caption with emojis",
-        "blog": "The full markdown body of the blog post",
-        "thread": "The Twitter/X style thread (numbered list)",
+        "classification": "the exact string of the chosen category (short_form, caption, blog, or thread)",
+        "short_form": "The punchy 1-paragraph summary (or empty string if not classified as short_form)",
+        "caption": "The social media caption with emojis (or empty string)",
+        "blog": "The full markdown body of the blog post (or empty string)",
+        "thread": "The Twitter/X style thread numbered list (or empty string)",
         "key_points": ["point 1", "point 2"],
         "sources": ["url1", "url2"],
         "tags": ["tag1", "tag2"],

@@ -12,7 +12,7 @@ function getDomain(url) {
 function Home() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [globalCategory, setGlobalCategory] = useState('short');
+    const [globalCategory, setGlobalCategory] = useState('all');
 
     useEffect(() => {
         fetch('http://localhost:5001/api/posts')
@@ -57,9 +57,10 @@ function Home() {
 
             {/* Global Content Classification */}
             <div style={{marginBottom: '2rem'}}>
-                <p style={{color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.8rem', textTransform: 'uppercase', fontWeight: 'bold'}}>Classify Feed By Category:</p>
+                <p style={{color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.8rem', textTransform: 'uppercase', fontWeight: 'bold'}}>Filter Feed By Classification:</p>
                 <div className="category-tabs" style={{margin: '0', borderBottom: 'none'}}>
-                    <button className={`tab-btn ${globalCategory === 'short' ? 'active' : ''}`} onClick={() => setGlobalCategory('short')}>⚡ Short-Form</button>
+                    <button className={`tab-btn ${globalCategory === 'all' ? 'active' : ''}`} onClick={() => setGlobalCategory('all')}>🌍 All Classifications</button>
+                    <button className={`tab-btn ${globalCategory === 'short_form' ? 'active' : ''}`} onClick={() => setGlobalCategory('short_form')}>⚡ Short-Form</button>
                     <button className={`tab-btn ${globalCategory === 'caption' ? 'active' : ''}`} onClick={() => setGlobalCategory('caption')}>📸 Captions</button>
                     <button className={`tab-btn ${globalCategory === 'thread' ? 'active' : ''}`} onClick={() => setGlobalCategory('thread')}>🧵 Threads</button>
                     <button className={`tab-btn ${globalCategory === 'blog' ? 'active' : ''}`} onClick={() => setGlobalCategory('blog')}>📰 Blogs</button>
@@ -67,10 +68,17 @@ function Home() {
             </div>
 
             <div className="posts-container">
-                {posts.length === 0 ? <p>No posts available.</p> : posts.map(post => {
+                {posts.filter(p => globalCategory === 'all' || p.classification === globalCategory).length === 0 ? <p>No posts matching this classification.</p> : 
+                 posts.filter(p => globalCategory === 'all' || p.classification === globalCategory).map(post => {
                     const domains = Array.from(new Set((post.sources || []).map(getDomain)));
                     
-                    const hasCategories = !!(post.blog || post.short_form || post.thread || post.caption);
+                    const classificationNames = {
+                        'short_form': '⚡ Short-Form',
+                        'caption': '📸 Caption',
+                        'thread': '🧵 Thread',
+                        'blog': '📰 Blog'
+                    };
+                    const displayClass = classificationNames[post.classification] || '📰 Unclassified';
                     
                     return (
                         <div key={post._id || post.id || post.slug} className="post-card">
@@ -85,25 +93,30 @@ function Home() {
                                 </div>
                             )}
 
-                            {/* Content Display based on Global Classification */}
+                            {/* Display Assigned Classification Badge */}
+                            <div className="format-badges" style={{marginTop: '0.5rem', marginBottom: '1rem'}}>
+                                <span className="format-badge" style={{background: 'rgba(56,189,248,0.2)', color: '#38bdf8', border: '1px solid #38bdf8'}}>
+                                    🤖 AI Classified as: {displayClass}
+                                </span>
+                            </div>
+
+                            {/* Display ONLY the content for the assigned classification */}
                             <div className="content-display-box" style={{marginTop: '0', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderLeft: '4px solid #6366f1'}}>
-                                {hasCategories ? (
-                                    <>
-                                        {globalCategory === 'short' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
-                                        {globalCategory === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
-                                        {globalCategory === 'thread' && (
-                                            <div style={{maxHeight:'200px', overflowY:'auto'}}>
-                                                {(post.thread || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
-                                            </div>
-                                        )}
-                                        {globalCategory === 'blog' && (
-                                            <div style={{maxHeight:'200px', overflowY:'auto'}}>
-                                                {(post.blog || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p className="snippet">{(post.body || '').substring(0, 160)}...</p>
+                                {post.classification === 'short_form' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
+                                {post.classification === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
+                                {post.classification === 'thread' && (
+                                    <div style={{maxHeight:'200px', overflowY:'auto'}}>
+                                        {(post.thread || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
+                                    </div>
+                                )}
+                                {post.classification === 'blog' && (
+                                    <div style={{maxHeight:'200px', overflowY:'auto'}}>
+                                        {(post.blog || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
+                                    </div>
+                                )}
+                                {/* Fallback for older posts */}
+                                {(!post.classification || post.classification === 'unknown') && (
+                                    <p className="snippet">{(post.body || post.short_form || post.blog || '').substring(0, 160)}...</p>
                                 )}
                             </div>
                             
@@ -149,66 +162,55 @@ function PostView() {
 
     return (
         <article className="full-post glass-panel">
+            {/* AI Classification Info */}
             <div style={{display:'flex', gap:'0.8rem', alignItems:'center', flexWrap:'wrap'}}>
-                <div className="trending-badge">📈 RAG Verified</div>
+                <div className="trending-badge">🤖 AI Classified: {post.classification ? post.classification.toUpperCase() : 'UNKNOWN'}</div>
+                <div className="trending-badge" style={{background: '#6366f1'}}>📈 RAG Verified</div>
                 <span style={{fontSize:'0.85rem', color: '#94a3b8'}}>Published on {new Date(post.created_at).toLocaleString()}</span>
             </div>
 
             <h1>{post.title}</h1>
 
-            {/* Interactive Category Selector */}
-            {hasCategories && (
-                <div className="category-tabs">
-                    <button className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`} onClick={() => setActiveTab('blog')}>📰 Blog Post</button>
-                    <button className={`tab-btn ${activeTab === 'short' ? 'active' : ''}`} onClick={() => setActiveTab('short')}>⚡ Short-Form Summary</button>
-                    <button className={`tab-btn ${activeTab === 'thread' ? 'active' : ''}`} onClick={() => setActiveTab('thread')}>🧵 Twitter / X Thread</button>
-                    <button className={`tab-btn ${activeTab === 'caption' ? 'active' : ''}`} onClick={() => setActiveTab('caption')}>📸 Social Caption</button>
-                    <button className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>📑 View All Formats</button>
-                </div>
-            )}
-
             <div className="content-display-box">
-                {hasCategories ? (
-                    <>
-                        {(activeTab === 'blog' || activeTab === 'all') && (
-                            <div className="content-section" style={{marginBottom: activeTab === 'all' ? '2.5rem' : '0'}}>
-                                <h2 style={{color:'#a855f7', marginBottom:'1rem'}}>📰 Blog Article</h2>
-                                {(post.blog || '').split('\n').map((line, i) => <p key={i}>{line}</p>)}
-                            </div>
-                        )}
+                {post.classification === 'blog' && (
+                    <div className="content-section">
+                        <h2 style={{color:'#a855f7', marginBottom:'1rem'}}>📰 Blog Article</h2>
+                        {(post.blog || '').split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                    </div>
+                )}
 
-                        {(activeTab === 'short' || activeTab === 'all') && (
-                            <div className="content-section" style={{marginBottom: activeTab === 'all' ? '2.5rem' : '0'}}>
-                                <h2 style={{color:'#6366f1', marginBottom:'1rem'}}>⚡ Short-Form Summary</h2>
-                                <p style={{fontSize:'1.15rem', lineHeight:'1.8', background:'rgba(99,102,241,0.1)', padding:'1rem', borderRadius:'12px', borderLeft:'4px solid #6366f1'}}>
-                                    {post.short_form}
-                                </p>
-                            </div>
-                        )}
+                {post.classification === 'short_form' && (
+                    <div className="content-section">
+                        <h2 style={{color:'#6366f1', marginBottom:'1rem'}}>⚡ Short-Form Summary</h2>
+                        <p style={{fontSize:'1.15rem', lineHeight:'1.8', background:'rgba(99,102,241,0.1)', padding:'1rem', borderRadius:'12px', borderLeft:'4px solid #6366f1'}}>
+                            {post.short_form}
+                        </p>
+                    </div>
+                )}
 
-                        {(activeTab === 'thread' || activeTab === 'all') && (
-                            <div className="content-section" style={{marginBottom: activeTab === 'all' ? '2.5rem' : '0'}}>
-                                <h2 style={{color:'#38bdf8', marginBottom:'1rem'}}>🧵 X / Twitter Thread</h2>
-                                {(post.thread || '').split('\n').map((line, i) => (
-                                    <p key={i} style={{margin:'0.6rem 0', padding:'0.6rem 1rem', background:'rgba(56,189,248,0.08)', borderRadius:'8px'}}>
-                                        {line}
-                                    </p>
-                                ))}
-                            </div>
-                        )}
+                {post.classification === 'thread' && (
+                    <div className="content-section">
+                        <h2 style={{color:'#38bdf8', marginBottom:'1rem'}}>🧵 X / Twitter Thread</h2>
+                        {(post.thread || '').split('\n').map((line, i) => (
+                            <p key={i} style={{margin:'0.6rem 0', padding:'0.6rem 1rem', background:'rgba(56,189,248,0.08)', borderRadius:'8px'}}>
+                                {line}
+                            </p>
+                        ))}
+                    </div>
+                )}
 
-                        {(activeTab === 'caption' || activeTab === 'all') && (
-                            <div className="content-section">
-                                <h2 style={{color:'#ec4899', marginBottom:'1rem'}}>📸 Social Media Caption</h2>
-                                <p style={{fontSize:'1.1rem', background:'rgba(236,72,153,0.1)', padding:'1rem', borderRadius:'12px', borderLeft:'4px solid #ec4899'}}>
-                                    {post.caption}
-                                </p>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    /* Fallback for legacy post body */
-                    (post.body || '').split('\n').map((line, i) => <p key={i}>{line}</p>)
+                {post.classification === 'caption' && (
+                    <div className="content-section">
+                        <h2 style={{color:'#ec4899', marginBottom:'1rem'}}>📸 Social Media Caption</h2>
+                        <p style={{fontSize:'1.1rem', background:'rgba(236,72,153,0.1)', padding:'1rem', borderRadius:'12px', borderLeft:'4px solid #ec4899'}}>
+                            {post.caption}
+                        </p>
+                    </div>
+                )}
+                
+                {/* Fallback for older posts */}
+                {(!post.classification || post.classification === 'unknown') && (
+                    (post.body || post.blog || post.short_form || '').split('\n').map((line, i) => <p key={i}>{line}</p>)
                 )}
             </div>
 
