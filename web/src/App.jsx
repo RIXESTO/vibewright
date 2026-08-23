@@ -26,13 +26,23 @@ function Home() {
             <div className="posts-container">
                 {posts.length === 0 ? <p>No posts available.</p> : posts.map(post => (
                     <div key={post.id} className="post-card">
-                        {post.image_url && <img src={post.image_url} alt="Header" className="post-media" />}
-                        <h3><Link to={`/post/${post.slug}`}>{post.title}</Link></h3>
+                        {post.image_url && (
+                            <img 
+                                src={post.image_url} 
+                                alt={post.title} 
+                                className="post-media" 
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                        )}
+                        <h3><Link to={`/post/${post.slug}`} style={{color: 'white', textDecoration: 'none'}}>{post.title}</Link></h3>
                         <p className="snippet">{post.body.substring(0, 150)}...</p>
                         <div className="post-tags">
                             {post.tags.map(tag => <span key={tag} className="post-tag">#{tag}</span>)}
                         </div>
-                        <span className="post-time">{new Date(post.created_at).toLocaleString()}</span>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem'}}>
+                            <span className="post-time">{new Date(post.created_at).toLocaleString()}</span>
+                            <Link to={`/post/${post.slug}`} className="read-more-btn" style={{color: '#9d72ff', fontWeight: 'bold', textDecoration: 'none'}}>Read Full Article →</Link>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -65,7 +75,14 @@ function PostView() {
         <article className="full-post glass-panel">
             <div className="trending-badge">📈 Trending as of {new Date(post.created_at).toLocaleDateString()}</div>
             <h1>{post.title}</h1>
-            {post.image_url && <img src={post.image_url} alt="Header" className="post-media large" />}
+            {post.image_url && (
+                <img 
+                    src={post.image_url} 
+                    alt={post.title} 
+                    className="post-media large" 
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                />
+            )}
             
             <div className="post-body">
                 {post.body.split('\\n').map((line, i) => <p key={i}>{line}</p>)}

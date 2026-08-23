@@ -269,9 +269,9 @@ class SwytchcodeClient {
             console.log(`[Swytchcode → Cloudinary] Uploaded ✓ ${url}`);
             return url;
         } catch (err) {
-            console.warn(`[Swytchcode → Cloudinary] ${err.message} — using Unsplash CDN fallback`);
+            console.warn(`[Swytchcode → Cloudinary] ${err.message} — using LoremFlickr CDN fallback`);
             const kw = encodeURIComponent(imagePrompt.split(' ')[0] || 'technology');
-            return `https://source.unsplash.com/1200x630/?technology,${kw}`;
+            return `https://loremflickr.com/1200/630/${kw}`;
         }
     }
 
