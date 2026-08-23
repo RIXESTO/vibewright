@@ -13,7 +13,7 @@ const { GoogleGenAI } = require('@google/genai');
 class SwytchcodeClient {
     constructor() {
         // Discovery
-        this.jinaKey        = process.env.JINA_API_KEY;
+        this.firecrawlKey   = process.env.FIRECRAWL_API_KEY;
         this.discoveryTopics = (process.env.DISCOVERY_QUERY_TOPICS || 'trending tech news').split(',').map(t => t.trim());
         this._topicIndex    = 0;
 
@@ -37,11 +37,12 @@ class SwytchcodeClient {
         this.cloudFolder    = process.env.CLOUDINARY_FOLDER || 'trend_content_pipeline';
 
         // Notifications
-        this.slackWebhook   = process.env.SLACK_WEBHOOK_URL;
+        this.slackToken     = process.env.SLACK_BOT_TOKEN;
+        this.slackChannel   = process.env.SLACK_CHANNEL || '#general';
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 1. DISCOVERY — Jina Search API
+    // 1. DISCOVERY — Firecrawl API
     // ─────────────────────────────────────────────────────────────────────────
     async executeDiscovery(query) {
         // Rotate through configured topics if no query supplied
@@ -49,53 +50,41 @@ class SwytchcodeClient {
             query = this.discoveryTopics[this._topicIndex % this.discoveryTopics.length];
             this._topicIndex++;
         }
-        console.log(`[Swytchcode → Jina] Searching: "${query}"`);
+        console.log(`[Swytchcode → Firecrawl] Searching: "${query}"`);
 
         try {
-            const res = await axios.get(
-                `https://s.jina.ai/${encodeURIComponent(query)}`,
+            const res = await axios.post(
+                'https://api.firecrawl.dev/v1/search',
+                { query: query, limit: 5 },
                 {
                     headers: {
-                        'Authorization': `Bearer ${this.jinaKey}`,
-                        'Accept': 'application/json',
-                        'X-Return-Format': 'json'
+                        'Authorization': `Bearer ${this.firecrawlKey}`,
+                        'Content-Type': 'application/json'
                     },
                     timeout: 15000
                 }
             );
-            const items = res.data?.data || res.data?.results || [];
+            const items = res.data?.data || [];
             const articles = items
-                .slice(0, 5)
                 .map(item => ({
-                    title:   item.title   || item.name        || 'Untitled',
-                    url:     item.url     || item.link        || '',
-                    content: item.content || item.description || item.snippet || ''
+                    title:   item.title   || 'Untitled',
+                    url:     item.url     || '',
+                    content: item.content || item.description || item.markdown || ''
                 }))
                 .filter(a => a.content.length > 50);
 
             if (articles.length > 0) {
-                console.log(`[Swytchcode → Jina] Found ${articles.length} articles`);
+                console.log(`[Swytchcode → Firecrawl] Found ${articles.length} articles`);
                 return articles;
             }
             throw new Error('No usable results');
         } catch (err) {
-            console.warn(`[Swytchcode → Jina Search] ${err.message} — trying Jina Reader fallback`);
-            try {
-                // Fallback: read TechCrunch front page
-                const res = await axios.get('https://r.jina.ai/https://techcrunch.com', {
-                    headers: { 'Authorization': `Bearer ${this.jinaKey}`, 'Accept': 'application/json' },
-                    timeout: 15000
-                });
-                const content = res.data?.data?.content || '';
-                return [{ title: `Trending: ${query}`, url: 'https://techcrunch.com', content: String(content).slice(0, 3000) }];
-            } catch (fallbackErr) {
-                console.warn(`[Swytchcode → Jina] Reader also failed — using mock`);
-                return [{
-                    title: `${query} — Key Developments in 2026`,
-                    url: 'https://techcrunch.com',
-                    content: `${query} is rapidly transforming enterprise technology. Recent studies show a 40% productivity increase with agentic multi-agent systems. Industry leaders are doubling investments in autonomous AI pipelines.`
-                }];
-            }
+            console.warn(`[Swytchcode → Firecrawl] ${err.message} — using mock fallback`);
+            return [{
+                title: `${query} — Key Developments in 2026`,
+                url: 'https://techcrunch.com',
+                content: `${query} is rapidly transforming enterprise technology. Recent studies show a 40% productivity increase with agentic multi-agent systems. Industry leaders are doubling investments in autonomous AI pipelines.`
+            }];
         }
     }
 
@@ -288,18 +277,25 @@ class SwytchcodeClient {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 6. NOTIFICATIONS — Slack Incoming Webhook
+    // 6. NOTIFICATIONS — Slack API
     // ─────────────────────────────────────────────────────────────────────────
     async executeNotification(message) {
         console.log(`[Swytchcode → Slack] Sending notification`);
         try {
             await axios.post(
-                this.slackWebhook,
+                'https://slack.com/api/chat.postMessage',
                 {
+                    channel: this.slackChannel,
                     text: message,
                     blocks: [{ type: 'section', text: { type: 'mrkdwn', text: message } }]
                 },
-                { timeout: 5000 }
+                { 
+                    headers: { 
+                        'Authorization': `Bearer ${this.slackToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 5000 
+                }
             );
             console.log(`[Swytchcode → Slack] Delivered ✓`);
             return { status: 'delivered', platform: 'Slack', timestamp: new Date().toISOString() };
