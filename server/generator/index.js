@@ -9,7 +9,7 @@ async function generateGroundedPost(contextChunks) {
     
     // Deterministically pick a category to ensure the feed has a diverse mix of all 4 formats
     const categories = ['short_form', 'caption', 'blog', 'thread'];
-    const forcedCategory = categories[Math.floor(Math.random() * categories.length)];
+    const forcedCategory = process.env.FORCE_CATEGORY || categories[Math.floor(Math.random() * categories.length)];
 
     const prompt = `
     You are an expert AI content classifier and tech journalist.
