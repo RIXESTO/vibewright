@@ -7,16 +7,20 @@ async function generateGroundedPost(contextChunks) {
     // Convert RAG context to a string block
     const contextText = contextChunks.map(c => `Source URL: ${c.url}\nTitle: ${c.title}\nContent: ${c.content}`).join('\n\n');
     
+    // Deterministically pick a category to ensure the feed has a diverse mix of all 4 formats
+    const categories = ['short_form', 'caption', 'blog', 'thread'];
+    const forcedCategory = categories[Math.floor(Math.random() * categories.length)];
+
     const prompt = `
     You are an expert AI content classifier and tech journalist.
-    First, carefully analyze the retrieved context and determine which ONE of the following 4 formats is the BEST fit for presenting this information:
-    - "short_form": if it's a quick summary or simple announcement.
-    - "caption": if it's highly visual, promotional, or a simple social media hook.
-    - "blog": if it's detailed, multi-faceted, or long-form analysis.
-    - "thread": if it's a sequence of events, listicle, or step-by-step breakdown.
+    Your task is to take the retrieved context and distill it strictly into a "${forcedCategory}" format.
+    - "short_form": distill the entire context into a quick 1-paragraph summary.
+    - "caption": distill the context into a punchy, emoji-filled social media hook.
+    - "blog": write a detailed, multi-faceted analysis.
+    - "thread": write a sequence of events or step-by-step breakdown.
     
-    After deciding the best classification, output that category name exactly in the "classification" field.
-    Then, write the content exclusively in the corresponding field for that classification, leaving the other 3 content fields as empty strings ("").
+    You MUST output "${forcedCategory}" in the "classification" field.
+    Then, write the content exclusively in the corresponding field for "${forcedCategory}", leaving the other 3 content fields as empty strings ("").
     
     Do not hallucinate facts outside this context.
     
