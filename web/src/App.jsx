@@ -12,6 +12,8 @@ function getDomain(url) {
 function Home() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    // Track active tab for each post on the feed
+    const [activeTabs, setActiveTabs] = useState({});
 
     useEffect(() => {
         fetch('http://localhost:5001/api/posts')
@@ -60,6 +62,8 @@ function Home() {
                     
                     const uniqueSeedImg = `https://picsum.photos/seed/${encodeURIComponent(post.slug || post.title)}/1200/630`;
                     const isValidImg = post.image_url && post.image_url.startsWith('http') && !post.image_url.includes('unsplash');
+                    const hasCategories = !!(post.blog || post.short_form || post.thread || post.caption);
+                    const currentTab = activeTabs[post.id || post.slug] || 'short';
                     
                     return (
                         <div key={post._id || post.id || post.slug} className="post-card">
@@ -83,23 +87,44 @@ function Home() {
                                 </div>
                             )}
 
-                            {/* Categorization Badges */}
-                            <div className="format-badges">
-                                <span className="format-badge">📰 Blog</span>
-                                <span className="format-badge">⚡ Short-Form</span>
-                                <span className="format-badge">🧵 Thread</span>
-                                <span className="format-badge">📸 Caption</span>
-                            </div>
+                            {/* Inline Category Tabs */}
+                            {hasCategories && (
+                                <div className="category-tabs" style={{margin: '1rem 0'}}>
+                                    <button className={`tab-btn ${currentTab === 'short' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'short'})}>⚡ Short-Form</button>
+                                    <button className={`tab-btn ${currentTab === 'caption' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'caption'})}>📸 Caption</button>
+                                    <button className={`tab-btn ${currentTab === 'thread' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'thread'})}>🧵 Thread</button>
+                                    <button className={`tab-btn ${currentTab === 'blog' ? 'active' : ''}`} style={{fontSize:'0.8rem', padding:'0.4rem 0.8rem'}} onClick={() => setActiveTabs({...activeTabs, [post.id || post.slug]: 'blog'})}>📰 Blog</button>
+                                </div>
+                            )}
 
-                            <p className="snippet">{(post.short_form || post.body || '').substring(0, 160)}...</p>
+                            <div className="content-display-box" style={{marginTop: '0', padding: '1rem', background: 'rgba(255,255,255,0.02)'}}>
+                                {hasCategories ? (
+                                    <>
+                                        {currentTab === 'short' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
+                                        {currentTab === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
+                                        {currentTab === 'thread' && (
+                                            <div style={{maxHeight:'200px', overflowY:'auto'}}>
+                                                {(post.thread || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
+                                            </div>
+                                        )}
+                                        {currentTab === 'blog' && (
+                                            <div style={{maxHeight:'200px', overflowY:'auto'}}>
+                                                {(post.blog || '').split('\n').map((line, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.9rem'}}>{line}</p>)}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p className="snippet">{(post.body || '').substring(0, 160)}...</p>
+                                )}
+                            </div>
                             
-                            <div className="post-tags">
+                            <div className="post-tags" style={{marginTop:'1rem'}}>
                                 {(post.tags || []).map(tag => <span key={tag} className="post-tag">#{tag}</span>)}
                             </div>
                             
                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem'}}>
                                 <span className="post-time">{new Date(post.created_at).toLocaleString()}</span>
-                                <Link to={`/post/${post.slug}`} className="read-more-btn" style={{color: '#9d72ff', fontWeight: 'bold', textDecoration: 'none'}}>Explore 4 Categories →</Link>
+                                <Link to={`/post/${post.slug}`} className="read-more-btn" style={{color: '#9d72ff', fontWeight: 'bold', textDecoration: 'none'}}>Open Full Page →</Link>
                             </div>
                         </div>
                     );
@@ -221,7 +246,7 @@ function PostView() {
                     Content synthesized strictly from deduplicated source domain documents retrieved from Weaviate vector database:
                 </p>
                 <ul>
-                    {(post.sources || []).map((src, i) => (
+                    {Array.from(new Set(post.sources || [])).map((src, i) => (
                         <li key={i}>
                             <a href={src} target="_blank" rel="noopener noreferrer">{src}</a>
                             <span style={{marginLeft: '0.5rem', fontSize: '0.8rem', color: '#10b981'}}>({getDomain(src)})</span>
