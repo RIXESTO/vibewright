@@ -287,9 +287,9 @@ class SwytchcodeClient {
             console.log(`[Swytchcode → Cloudinary] Uploaded ✓ ${url}`);
             return url;
         } catch (err) {
-            console.warn(`[Swytchcode → Cloudinary] ${err.message} — using LoremFlickr CDN fallback`);
-            const kw = encodeURIComponent(imagePrompt.split(' ')[0] || 'technology');
-            return `https://loremflickr.com/1200/630/${kw}`;
+            console.warn(`[Swytchcode → Cloudinary] ${err.message} — using Picsum unique seed CDN fallback`);
+            const seed = encodeURIComponent(imagePrompt.split(' ')[0] || 'tech');
+            return `https://picsum.photos/seed/${seed}/1200/630`;
         }
     }
 

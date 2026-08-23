@@ -58,15 +58,18 @@ function Home() {
                 {posts.length === 0 ? <p>No posts available.</p> : posts.map(post => {
                     const domains = Array.from(new Set((post.sources || []).map(getDomain)));
                     
+                    const uniqueSeedImg = `https://picsum.photos/seed/${encodeURIComponent(post.slug || post.title)}/1200/630`;
+                    const isValidImg = post.image_url && post.image_url.startsWith('http') && !post.image_url.includes('unsplash');
+                    
                     return (
                         <div key={post._id || post.id || post.slug} className="post-card">
                             <img 
-                                src={post.image_url && post.image_url.startsWith('http') ? post.image_url : 'https://loremflickr.com/1200/630/technology'} 
+                                src={isValidImg ? post.image_url : uniqueSeedImg} 
                                 alt={post.title} 
                                 className="post-media" 
                                 onError={(e) => { 
                                     e.target.onerror = null; 
-                                    e.target.src = 'https://loremflickr.com/1200/630/technology'; 
+                                    e.target.src = uniqueSeedImg; 
                                 }}
                             />
                             
@@ -139,15 +142,21 @@ function PostView() {
 
             <h1>{post.title}</h1>
             
-            <img 
-                src={post.image_url && post.image_url.startsWith('http') ? post.image_url : 'https://loremflickr.com/1200/630/technology'} 
-                alt={post.title} 
-                className="post-media large" 
-                onError={(e) => { 
-                    e.target.onerror = null; 
-                    e.target.src = 'https://loremflickr.com/1200/630/technology'; 
-                }}
-            />
+            {(() => {
+                const uniqueSeedImg = `https://picsum.photos/seed/${encodeURIComponent(post.slug || post.title)}/1200/630`;
+                const isValidImg = post.image_url && post.image_url.startsWith('http') && !post.image_url.includes('unsplash');
+                return (
+                    <img 
+                        src={isValidImg ? post.image_url : uniqueSeedImg} 
+                        alt={post.title} 
+                        className="post-media large" 
+                        onError={(e) => { 
+                            e.target.onerror = null; 
+                            e.target.src = uniqueSeedImg; 
+                        }}
+                    />
+                );
+            })()}
 
             {/* Interactive Category Selector */}
             {hasCategories && (
