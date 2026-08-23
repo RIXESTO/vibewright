@@ -257,7 +257,8 @@ class SwytchcodeClient {
                             blog: "Mock blog data. API quota reached.",
                             thread: "1/ Mock thread data.\n2/ API quota reached.",
                             key_points: ["API limit reached", "Fallback activated"],
-                            sources: ["https://techcrunch.com"]
+                            sources: ["https://techcrunch.com"],
+                            image_prompt: "abstract technology ai future"
                         };
                     }
                     else { throw err; }
@@ -274,7 +275,8 @@ class SwytchcodeClient {
             blog: "Mock blog data. API quota reached.",
             thread: "1/ Mock thread data.\n2/ API quota reached.",
             key_points: ["API limit reached", "Fallback activated"],
-            sources: ["https://techcrunch.com"]
+            sources: ["https://techcrunch.com"],
+            image_prompt: "abstract technology ai future"
         };
     }
 
