@@ -60,7 +60,6 @@ function Home() {
                 <p style={{color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.8rem', textTransform: 'uppercase', fontWeight: 'bold'}}>Filter Feed By Classification:</p>
                 <div className="category-tabs" style={{margin: '0', borderBottom: 'none'}}>
                     <button className={`tab-btn ${globalCategory === 'all' ? 'active' : ''}`} onClick={() => setGlobalCategory('all')}>🌍 All Classifications</button>
-                    <button className={`tab-btn ${globalCategory === 'short_form' ? 'active' : ''}`} onClick={() => setGlobalCategory('short_form')}>⚡ Short-Form</button>
                     <button className={`tab-btn ${globalCategory === 'caption' ? 'active' : ''}`} onClick={() => setGlobalCategory('caption')}>📸 Captions</button>
                     <button className={`tab-btn ${globalCategory === 'thread' ? 'active' : ''}`} onClick={() => setGlobalCategory('thread')}>🧵 Threads</button>
                     <button className={`tab-btn ${globalCategory === 'blog' ? 'active' : ''}`} onClick={() => setGlobalCategory('blog')}>📰 Blogs</button>
@@ -73,7 +72,6 @@ function Home() {
                     const domains = Array.from(new Set((post.sources || []).map(getDomain)));
                     
                     const classificationNames = {
-                        'short_form': '⚡ Short-Form',
                         'caption': '📸 Caption',
                         'thread': '🧵 Thread',
                         'blog': '📰 Blog'
@@ -102,7 +100,6 @@ function Home() {
 
                             {/* Display ONLY the content for the assigned classification */}
                             <div className="content-display-box" style={{marginTop: '0', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderLeft: '4px solid #6366f1'}}>
-                                {post.classification === 'short_form' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.short_form}</p>}
                                 {post.classification === 'caption' && <p style={{fontSize:'1rem', lineHeight:'1.6'}}>{post.caption}</p>}
                                 {post.classification === 'thread' && (
                                     <div style={{maxHeight:'200px', overflowY:'auto'}}>
@@ -115,8 +112,8 @@ function Home() {
                                     </div>
                                 )}
                                 {/* Fallback for older posts */}
-                                {(!post.classification || post.classification === 'unknown') && (
-                                    <p className="snippet">{(post.body || post.short_form || post.blog || '').substring(0, 160)}...</p>
+                                {(!post.classification || post.classification === 'unknown' || post.classification === 'short_form') && (
+                                    <p className="snippet">{(post.body || post.blog || '').substring(0, 160)}...</p>
                                 )}
                             </div>
                             
@@ -179,15 +176,6 @@ function PostView() {
                     </div>
                 )}
 
-                {post.classification === 'short_form' && (
-                    <div className="content-section">
-                        <h2 style={{color:'#6366f1', marginBottom:'1rem'}}>⚡ Short-Form Summary</h2>
-                        <p style={{fontSize:'1.15rem', lineHeight:'1.8', background:'rgba(99,102,241,0.1)', padding:'1rem', borderRadius:'12px', borderLeft:'4px solid #6366f1'}}>
-                            {post.short_form}
-                        </p>
-                    </div>
-                )}
-
                 {post.classification === 'thread' && (
                     <div className="content-section">
                         <h2 style={{color:'#38bdf8', marginBottom:'1rem'}}>🧵 X / Twitter Thread</h2>
@@ -209,8 +197,8 @@ function PostView() {
                 )}
                 
                 {/* Fallback for older posts */}
-                {(!post.classification || post.classification === 'unknown') && (
-                    (post.body || post.blog || post.short_form || '').split('\n').map((line, i) => <p key={i}>{line}</p>)
+                {(!post.classification || post.classification === 'unknown' || post.classification === 'short_form') && (
+                    (post.body || post.blog || '').split('\n').map((line, i) => <p key={i}>{line}</p>)
                 )}
             </div>
 

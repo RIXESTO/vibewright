@@ -251,8 +251,7 @@ class SwytchcodeClient {
                         return {
                             title: "AI Trends: Mock Generation (API Limit Reached)",
                             slug: "mock-quota-" + Date.now(),
-                            classification: process.env.FORCE_CATEGORY || 'short_form',
-                            short_form: "This is a mock short-form summary generated because the API quota was exceeded. The classification system successfully picked this format!",
+                            classification: process.env.FORCE_CATEGORY || 'caption',
                             caption: "🔥 Mock caption due to API rate limit! The classification system successfully picked this format! #AI #Trend",
                             blog: "Mock blog data. API quota reached.",
                             thread: "1/ Mock thread data.\n2/ API quota reached.",
@@ -270,7 +269,6 @@ class SwytchcodeClient {
             title: "AI Trends: Mock Generation (API Limit Reached)",
             slug: "mock-quota-final-" + Date.now(),
             classification: process.env.FORCE_CATEGORY || 'caption',
-            short_form: "This is a mock short-form summary generated because the API quota was exceeded.",
             caption: "🔥 Mock caption due to API rate limit! The classification system successfully picked this format! #AI #Trend",
             blog: "Mock blog data. API quota reached.",
             thread: "1/ Mock thread data.\n2/ API quota reached.",

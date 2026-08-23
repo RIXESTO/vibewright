@@ -18,7 +18,6 @@ async function connectDB() {
 const PostSchema = new mongoose.Schema({
     slug:           { type: String, unique: true, required: true },
     title:          { type: String, required: true },
-    short_form:     { type: String },
     caption:        { type: String },
     blog:           { type: String },
     thread:         { type: String },
@@ -55,7 +54,6 @@ async function insertPost(post) {
         {
             slug:           post.slug,
             title:          post.title,
-            short_form:     post.short_form,
             caption:        post.caption,
             blog:           post.blog,
             thread:         post.thread,
